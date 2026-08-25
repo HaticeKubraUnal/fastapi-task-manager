@@ -50,6 +50,8 @@ fastapi dev app/main.py
 * API Documentation (Swagger UI): [http://127.0.0.1:8000/docs](http://127.0.0.1:8000/docs)
 
 ## 📸 Pictures From Project
-<img width="1632" height="926" alt="image" src="https://github.com/user-attachments/assets/e6719212-65a0-4050-9c96-637a21768686" />
+<img img width="88%" alt="image" src="https://github.com/user-attachments/assets/e6719212-65a0-4050-9c96-637a21768686" />
+<br>
+<br>
 <img width="891" height="646" alt="image" src="https://github.com/user-attachments/assets/92022887-5a39-4bd7-8d1b-9dd8a7adf904" />
 
