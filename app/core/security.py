@@ -33,10 +33,6 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 #           Gizli Mühür (İmza) - sahtelik kontrolü
 
 
-SECRET_KEY = "super_secret_key_123"     # Mühürdür - Gerçekte bu şifre .env dosyasında gizlenir!
-ALGORITHM = "HS256"                     # Mührü basarken kullandığımız makinenin/matematiğin adıdır.
-ACCESS_TOKEN_EXPIRE_MINUTES = 30        # Geçerlilik süresi (30 dakika)
-
 # Token'i oluşturan fonksiyon
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()     # Orijinal veriyi yedekleriz ve to_encode paketine koyarız
