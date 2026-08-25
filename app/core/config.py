@@ -1,5 +1,4 @@
-#(Kasa ve Güvenlik Odası): Projenin beynidir. JWT Token üretildiği,
-# şifrelerin kırılmaz hale (hash) getirildiği çok gizli güvenlik mekanizmaları bu odada yer alacak.
+# Kodun içine açıkça yazılmaması gereken .env dosyasındaki şifreleri güvenli bir şekilde çekip Python'un kullanabileceği hale getirir.
 
 from pydantic_settings import BaseSettings
 

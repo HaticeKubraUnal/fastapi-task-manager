@@ -5,7 +5,7 @@
 from pydantic import BaseModel, EmailStr    # BaseModel = Pydantic kütüphanesinin "Şablon" oluşturma aracıdır
                                             # Emailstr = @ var mı yada alan adı geçerli mi diye kontrol eder. Hatalıysa otomatik hata gönderir.
 
-# kullanıcıya sunulan ondan girmesini istediğimiz şeyler
+# kullanıcıya sunulan ondan girmesini istediğimiz şeyler (yani mesela kullanıcı kendi id'sini girmez.)
 
 class UserCreate(BaseModel):    # Kullanıcıdan kayıt olurken alınacak bilgiler
     email: EmailStr

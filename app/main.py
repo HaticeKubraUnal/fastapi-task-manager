@@ -44,3 +44,12 @@ def serve_frontend():
     return "frontend/index.html"
 
 
+#------------------------------------------------------------------------------------------
+# 1. main.py sistemi başlatır ve gelen isteği routers'a gönderir.
+# 2. routers, gelen veriyi schemas ile kontrol edip süzer.
+# 3. Eğer güvenlik/şifre işlemi varsa core altındaki araçlar kullanılır.
+# 4. Süzülmüş ve güvenli veri, models kalıplarına sokulur.
+# 5. Son olarak db aracılığıyla SQLite veritabanına kalıcı olarak yazılır.
+# 6. İşlem bittiğinde aynı yol tersten izlenerek frontend'e "İşlem Başarılı" yanıtı döner.
+#------------------------------------------------------------------------------------------
+

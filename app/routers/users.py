@@ -3,6 +3,8 @@
 # Burası tüm dosyaların birleştiği yerdir.
 
 # Kullanıcı Kayıt Veznesi
+# routers, dışarıdan gelen veriyi önce schema'ya sokup "Bu veri kurallara uygun mu?" diye kontrol eder. 
+# Eğer uygunsa bunu models'e çevirip veritabanına yazar. Veritabanından veri çekerken de yine şemadan geçirip fazlalıkları filtreleyerek frontend'e temiz bilgi sunar.
 
 from fastapi import APIRouter, HTTPException, status, Depends
 from sqlmodel import Session, select

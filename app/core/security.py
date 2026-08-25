@@ -1,5 +1,4 @@
-#(Kasa ve Güvenlik Odası): Projenin beynidir. JWT Token üretildiği,
-# şifrelerin kırılmaz hale (hash) getirildiği çok gizli güvenlik mekanizmaları bu odada yer alır.
+# Projenin beynidir. JWT Token üretildiği, şifrelerin kırılmaz hale (hash) getirildiği çok gizli güvenlik mekanizmaları bu odada yer alır.
 
 from datetime import datetime, timedelta, timezone
 from passlib.context import CryptContext
@@ -15,10 +14,12 @@ from app.core.config import settings
 # 1. ŞİFRELEME AYARLARI
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")   # pwd_context adında bir makinemiz var ve bcrypt şifrelemesi kullanıyor. Ayrıca eski bir sistem varsa bunu otomatik yeniliyor.
 
+# Sadece kullanıcı kayıt olurken routers/users.py 'de çağırılır.
 def get_password_hash(password: str) -> str:
     # Kullanıcının girdiği düz şifreyi karmaşık bir koda çevirir.
     return pwd_context.hash(password)
 
+# Sadece bir kullanıcı giriş yaparken şifresinin doğru olup olmadığını anlamak için routers/users.py.'da çağrılır.
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     # Giriş yaparken girilen şifre ile veritabanındaki karmaşık şifre eşleşiyor mu diye bakar.
     return pwd_context.verify(plain_password, hashed_password)
@@ -33,7 +34,7 @@ def verify_password(plain_password: str, hashed_password: str) -> bool:
 #           Gizli Mühür (İmza) - sahtelik kontrolü
 
 
-# Token'i oluşturan fonksiyon
+# Kullanıcı giriş yapıp şifresi doğru çıktığı anda ona bir bilet vermek için anlık olarak routers/users.py 'de çalıştırılır.
 def create_access_token(data: dict) -> str:
     to_encode = data.copy()     # Orijinal veriyi yedekleriz ve to_encode paketine koyarız
     expire = datetime.now(timezone.utc) + timedelta(minutes=settings.access_token_expire_minutes)    # Şuanki saate geçerlilik süresini ekleyip bitiş süresini hesaplar
@@ -44,10 +45,11 @@ def create_access_token(data: dict) -> str:
     return encoded_jwt
 
 
-
 # FastAPI'ye tokenlerin nereden dağıtıldığını söylüyoruz
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="users/login") # Bir uygulama korumalı bir işlem yapmak istediğinde (örneğin görev eklemek), isteğin "HTTP Header" (Başlık) kısmına bir token koymak zorundadır. Bu kod, o başlıkta Bearer kelimesiyle başlayan token'ı arayıp bulma işini otomatik yapar.
 
+
+# Kullanıcı bir görev eklemek, silmek veya görmek istediğinde routers/tasks.py'de çalıştırılır.
 def get_current_user_id(token: str = Depends(oauth2_scheme)): # Depends(...) -> istemcinin başlığından gelen token'ı metin (str) olarak alıp buradaki token değişkeninin içine koyar.
 
     # Kullanıcının getirdiği token'i okur, geçerliyse içindeki ID numarasını (sub) geri verir.
