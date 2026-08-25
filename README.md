@@ -53,5 +53,5 @@ fastapi dev app/main.py
 <img img width="88%" alt="image" src="https://github.com/user-attachments/assets/e6719212-65a0-4050-9c96-637a21768686" />
 <br>
 <br>
-<img img width="%80" alt="image" src="https://github.com/user-attachments/assets/92022887-5a39-4bd7-8d1b-9dd8a7adf904" />
+<img img width="%50" alt="image" src="https://github.com/user-attachments/assets/92022887-5a39-4bd7-8d1b-9dd8a7adf904" />
 
