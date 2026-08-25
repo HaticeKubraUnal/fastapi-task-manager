@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Görev Yöneticisi</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f7f6; color: #333; max-width: 600px; margin: 40px auto; padding: 20px; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-bottom: 20px; }
+        input[type="text"], input[type="email"], input[type="password"] { width: calc(100% - 22px); padding: 10px; margin-bottom: 10px; border: 1px solid #ddd; border-radius: 4px; font-family: inherit;}
+        button { background-color: #4CAF50; color: white; border: none; padding: 10px 15px; cursor: pointer; border-radius: 4px; width: 100%; margin-bottom: 10px; font-family: inherit;}
+        button:hover { background-color: #45a049; }
+        .danger { background-color: #f44336; }
+        .danger:hover { background-color: #da190b; }
+        .task-item { display: flex; justify-content: space-between; align-items: center; padding: 15px 10px; border-bottom: 1px solid #eee; }
+        .task-item:last-child { border-bottom: none; }
+        .task-item.completed .task-content { text-decoration: line-through; opacity: 0.6; }
+        .task-title { font-weight: bold; font-size: 16px; margin-bottom: 4px;}
+        .task-desc { font-size: 13px; color: #666; }
+        .hidden { display: none; }
+        .flex { display: flex; gap: 10px; }
+        .flex button { width: auto; margin:0; padding: 8px 12px;}
+        
+        /* YENİ: Şık Düzenleme Penceresi (Modal) Tasarımı */
+        .modal-overlay {
+            display: none; /* Başlangıçta gizli */
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5); /* Arka planı hafif karartır */
+            justify-content: center; align-items: center; z-index: 1000;
+        }
+        .modal-content {
+            background: white; padding: 25px; border-radius: 8px; width: 90%; max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+        .modal-content h3 { margin-top: 0; margin-bottom: 15px; }
+    </style>
+</head>
+<body>
+
+    <!-- GİRİŞ / KAYIT EKRANI -->
+    <div id="auth-section" class="card">
+        <h2>Giriş Yap veya Kaydol</h2>
+        <input type="email" id="email" placeholder="E-posta" required>
+        <input type="password" id="password" placeholder="Şifre" required>
+        <div class="flex">
+            <button onclick="login()">Giriş Yap</button>
+            <button onclick="register()" style="background-color: #2196F3;">Kaydol</button>
+        </div>
+        <p id="auth-msg" style="color: red; font-size: 14px;"></p>
+    </div>
+
+    <!-- GÖREVLER EKRANI -->
+    <div id="app-section" class="card hidden">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
+            <h2 style="margin: 0;">Görevlerim</h2>
+            <button onclick="logout()" class="danger" style="width: auto; padding: 6px 12px;">Çıkış Yap</button>
+        </div>
+        
+        <div style="margin-bottom: 20px; padding: 15px; background: #f9f9f9; border-radius: 6px; border: 1px solid #eee;">
+            <input type="text" id="new-task-title" placeholder="Görev Başlığı..." required>
+            <input type="text" id="new-task-desc" placeholder="Görev Açıklaması (İsteğe bağlı)..." onkeypress="handleEnter(event, 'add')">
+            <button onclick="addTask()" style="margin-bottom: 0;">Görevi Ekle</button>
+        </div>
+
+        <div id="task-list">
+            <!-- Görevler buraya JS ile yüklenecek -->
+        </div>
+    </div>
+
+    <!-- YENİ: DÜZENLEME PENCERESİ (MODAL) -->
+    <div id="edit-modal" class="modal-overlay">
+        <div class="modal-content">
+            <h3>Görevi Düzenle</h3>
+            <!-- Hangi görevi düzenlediğimizi bilmek için gizli ID kutusu -->
+            <input type="hidden" id="edit-task-id"> 
+            
+            <input type="text" id="edit-task-title" placeholder="Yeni Görev Başlığı..." required>
+            <input type="text" id="edit-task-desc" placeholder="Yeni Görev Açıklaması..." onkeypress="handleEnter(event, 'edit')">
+            
+            <div class="flex" style="margin-top: 15px;">
+                <button onclick="saveEdit()" style="background-color: #2196F3;">Kaydet</button>
+                <button onclick="closeEditModal()" style="background-color: #999;">İptal</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "http://127.0.0.1:8000";
+
+        window.onload = () => {
+            const token = localStorage.getItem("token");
+            if (token) { showApp(); loadTasks(); }
+        };
+
+        // Enter tuşu hem eklemede hem düzenlemede çalışsın
+        function handleEnter(e, action) {
+            if (e.key === 'Enter') { 
+                if (action === 'add') addTask();
+                if (action === 'edit') saveEdit();
+            }
+        }
+
+        async function register() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const res = await fetch(`${API_URL}/users/register`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ email, password })
+            });
+            if (res.ok) {
+                document.getElementById("auth-msg").style.color = "green";
+                document.getElementById("auth-msg").innerText = "Kayıt başarılı! Şimdi giriş yapabilirsiniz.";
+            } else {
+                const error = await res.json();
+                document.getElementById("auth-msg").innerText = error.detail || "Kayıt hatası.";
+            }
+        }
+
+        async function login() {
+            const email = document.getElementById("email").value;
+            const password = document.getElementById("password").value;
+            const params = new URLSearchParams();
+            params.append('username', email);
+            params.append('password', password);
+
+            const res = await fetch(`${API_URL}/users/login`, { method: "POST", body: params });
+            if (res.ok) {
+                const data = await res.json();
+                localStorage.setItem("token", data.access_token);
+                showApp(); loadTasks();
+            } else { document.getElementById("auth-msg").innerText = "Hatalı e-posta veya şifre."; }
+        }
+
+        function logout() {
+            localStorage.removeItem("token");
+            document.getElementById("app-section").classList.add("hidden");
+            document.getElementById("auth-section").classList.remove("hidden");
+        }
+
+        async function loadTasks() {
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${API_URL}/tasks/`, { headers: { "Authorization": `Bearer ${token}` }});
+            
+            if (res.ok) {
+                const tasks = await res.json();
+                const list = document.getElementById("task-list");
+                list.innerHTML = "";
+                
+                tasks.forEach(task => {
+                    const safeTitle = task.title.replace(/'/g, "\\'");
+                    const safeDesc = (task.description || "").replace(/'/g, "\\'");
+
+                    // YENİ: Eğer görev tamamlanmışsa (is_completed), editButton HTML'i boş kalacak
+                    const editButton = !task.is_completed 
+                        ? `<button onclick="openEditModal(${task.id}, '${safeTitle}', '${safeDesc}')" style="background-color: #2196F3;">Düzenle</button>` 
+                        : '';
+
+                    list.innerHTML += `
+                        <div class="task-item ${task.is_completed ? 'completed' : ''}">
+                            <div class="task-content">
+                                <div class="task-title">${task.title}</div>
+                                ${task.description ? `<div class="task-desc">${task.description}</div>` : ''}
+                            </div>
+                            <div class="flex">
+                                ${editButton}
+                                <button onclick="toggleTask(${task.id}, ${!task.is_completed})" style="background-color: ${task.is_completed ? '#ff9800' : '#4CAF50'};">${task.is_completed ? 'Geri Al' : 'Bitir'}</button>
+                                <button onclick="deleteTask(${task.id})" class="danger">Sil</button>
+                            </div>
+                        </div>
+                    `;
+                });
+            } else if (res.status === 401) { logout(); }
+        }
+
+        async function addTask() {
+            const token = localStorage.getItem("token");
+            const title = document.getElementById("new-task-title").value;
+            const desc = document.getElementById("new-task-desc").value;
+            
+            if(!title) { alert("Lütfen bir görev başlığı girin!"); return; }
+
+            await fetch(`${API_URL}/tasks/`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify({ title: title, description: desc })
+            });
+
+            document.getElementById("new-task-title").value = "";
+            document.getElementById("new-task-desc").value = "";
+            loadTasks();
+        }
+
+        // --- YENİ MODAL (PENCERE) FONKSİYONLARI ---
+
+        // 1. Pencereyi aç ve içini doldur
+        function openEditModal(id, currentTitle, currentDesc) {
+            document.getElementById("edit-task-id").value = id;
+            document.getElementById("edit-task-title").value = currentTitle;
+            document.getElementById("edit-task-desc").value = currentDesc;
+            
+            // Pencereyi görünür yap (CSS'i flex olarak değiştiriyoruz)
+            document.getElementById("edit-modal").style.display = "flex";
+        }
+
+        // 2. Pencereyi kapat
+        function closeEditModal() {
+            document.getElementById("edit-modal").style.display = "none";
+        }
+
+        // 3. Değişiklikleri kaydet (Backend'e gönder)
+        async function saveEdit() {
+            const id = document.getElementById("edit-task-id").value;
+            const newTitle = document.getElementById("edit-task-title").value;
+            const newDesc = document.getElementById("edit-task-desc").value;
+
+            if(!newTitle) { alert("Görev başlığı boş olamaz!"); return; }
+
+            const token = localStorage.getItem("token");
+            await fetch(`${API_URL}/tasks/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify({ title: newTitle, description: newDesc })
+            });
+            
+            closeEditModal(); // Kaydedince pencereyi kapat
+            loadTasks();      // Listeyi yenile
+        }
+
+        async function toggleTask(id, newStatus) {
+            const token = localStorage.getItem("token");
+            await fetch(`${API_URL}/tasks/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json", "Authorization": `Bearer ${token}` },
+                body: JSON.stringify({ is_completed: newStatus }) 
+            });
+            loadTasks();
+        }
+
+        async function deleteTask(id) {
+            const token = localStorage.getItem("token");
+            await fetch(`${API_URL}/tasks/${id}`, { method: "DELETE", headers: { "Authorization": `Bearer ${token}` }});
+            loadTasks();
+        }
+
+        function showApp() {
+            document.getElementById("auth-section").classList.add("hidden");
+            document.getElementById("app-section").classList.remove("hidden");
+            document.getElementById("auth-msg").innerText = "";
+        }
+    </script>
+</body>
+</html>
